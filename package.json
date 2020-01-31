@@ -1,0 +1,22 @@
+{
+  "name": "@c4312/chromehash",
+  "version": "0.1.0",
+  "description": "A Rust/WebAssembly implementation of the Chrome content hashing algorithm",
+  "main": "pkg/chromehash",
+  "scripts": {
+    "prepublishOnly": "rimraf pkg && wasm-pack build --target nodejs --release"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/connor4312/chromehash.git"
+  },
+  "author": "Connor Peet <connor@peet.io>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/connor4312/chromehash/issues"
+  },
+  "homepage": "https://github.com/connor4312/chromehash#readme",
+  "devDependencies": {
+    "rimraf": "^3.0.1"
+  }
+}
