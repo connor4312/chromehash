@@ -1,6 +1,6 @@
 {
   "name": "@c4312/chromehash",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A Rust/WebAssembly implementation of the Chrome content hashing algorithm",
   "main": "index.js",
   "scripts": {
