@@ -46,4 +46,10 @@ for (const filename of testFiles) {
     const actual = hash(fs.readFileSync(path.join(testDir, filename)));
     assert.strictEqual(actual, expectedHashes.get(filename));
   });
+
+  it(`${filename} file hash matches buffer`, () => {
+    const bufHash = hash(fs.readFileSync(path.join(testDir, filename)));
+    const fileHash = hash(fs.readFileSync(path.join(testDir, filename)));
+    assert.strictEqual(bufHash, fileHash);
+  });
 }
