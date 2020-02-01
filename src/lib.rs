@@ -1,10 +1,11 @@
 extern crate wasm_bindgen;
 
 use wasm_bindgen::prelude::*;
+use std::cmp;
 
 // These constants are constant in Chromium code. Not configurable, just used for seeing hashes.
 const HASHES: usize = 5;
-const U32_SIZE: u8 = 4;
+const U32_SIZE: usize = 4;
 const PRIMES: [u64; HASHES] = [0x3FB75161, 0xAB1F4E4F, 0x82675BC5, 0xCD924D35, 0x81ABE279];
 const RANDOM_EVN: [u64; HASHES] = [0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476, 0xC3D2E1F0];
 const RANDOM_ODD: [u64; HASHES] = [0xB4663807, 0xCC322BF5, 0xD4F91BBD, 0xA7BEA11D, 0x8F462907];
@@ -15,7 +16,7 @@ pub struct Hasher {
     zi: [u64; HASHES],
     current: usize,
     next_u32: u32,
-    next_len: u8,
+    next_len: usize,
 }
 
 #[wasm_bindgen]
@@ -31,18 +32,20 @@ impl Hasher {
         }
     }
 
-    pub fn update(&mut self, input: &[u8]) {
-        for offset in 0..input.len() {
-            self.next_u32 >>= 8;
-            self.next_u32 |= (input[offset] as u32) << 24;
-            self.next_len -= 1;
+    pub fn update(&mut self, mut input: &[u8]) {
+        let offset = cmp::min(U32_SIZE - self.next_len, input.len());
+        self.digest_raw(&input[0..offset]);
+        input = &input[offset..];
 
-            if self.next_len == 0 {
-                self.add_u32(self.next_u32);
-                self.next_u32 = 0;
-                self.next_len = U32_SIZE;
-            }
+        // WebAssembly's numbers are little endian, which is what we need for
+        // hash input. Thus we can just look at the remaining (full) bytes
+        // in the slice and treat them as u32's.
+        let remaining = (input.len() / U32_SIZE) * U32_SIZE;
+        for v in (0..remaining).step_by(U32_SIZE) {
+            self.add_u32(unsafe { *std::mem::transmute::<&u8, &u32>(&input[v]) });
         }
+
+        self.digest_raw(&input[remaining..]);
     }
 
     pub fn digest(&mut self, output: &mut [u8]) {
@@ -57,6 +60,21 @@ impl Hasher {
             output[hi + 1] = (v >> 16) as u8;
             output[hi + 2] = (v >> 8) as u8;
             output[hi + 3] = (v >> 0) as u8;
+        }
+    }
+
+    #[inline(always)]
+    fn digest_raw(&mut self, input: &[u8]) {
+        for &v in input {
+            self.next_u32 >>= 8;
+            self.next_u32 |= (v as u32) << 24;
+            self.next_len -= 1;
+
+            if self.next_len == 0 {
+                self.add_u32(self.next_u32);
+                self.next_u32 = 0;
+                self.next_len = U32_SIZE;
+            }
         }
     }
 

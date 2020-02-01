@@ -2,7 +2,7 @@ const path = require('path');
 const fs = require('fs');
 const assert = require('assert');
 const url = require('url');
-const { hash } = require('./');
+const { hash, hashFile } = require('./');
 const { chromium } = require('playwright');
 
 const testDir = path.join(__dirname, 'test-cases');
@@ -47,9 +47,11 @@ for (const filename of testFiles) {
     assert.strictEqual(actual, expectedHashes.get(filename));
   });
 
-  it(`${filename} file hash matches buffer`, () => {
+  it(`${filename} file hash matches buffer`, async () => {
     const bufHash = hash(fs.readFileSync(path.join(testDir, filename)));
-    const fileHash = hash(fs.readFileSync(path.join(testDir, filename)));
+    const fileHash = await hashFile(path.join(testDir, filename));
+    const fileHashSlow = await hashFile(path.join(testDir, filename), 5);
     assert.strictEqual(bufHash, fileHash);
+    assert.strictEqual(fileHashSlow, fileHash);
   });
 }

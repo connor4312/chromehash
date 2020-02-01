@@ -17,8 +17,12 @@ exports.hash = input => {
   return output.toString('hex');
 };
 
-exports.hashFile = async file => {
-  const buf = Buffer.alloc(4096);
+exports.hashFile = async (file, bufferSize = 4096) => {
+  if (bufferSize % 2 === 1) {
+    bufferSize++; // ensure buffer size is even for the swap16() in BE BOM reading.
+  }
+
+  const buf = Buffer.alloc(bufferSize);
   const hasher = new Hasher();
 
   let fd;
@@ -35,11 +39,10 @@ exports.hashFile = async file => {
         hasher.update(buf.slice(0, lastRead.bytesRead));
       }
     } else if (hasUtf16BEBOM(bomBuf)) {
-      hasher.update(bomBuf.slice(2)); // add the trailing BOM read byte
+      hasher.update(bomBuf.slice(2).swap16()); // add the trailing BOM read byte
       while (lastRead.bytesRead === buf.length) {
         lastRead = await read(fd, buf, 0, buf.length, null);
-        buf.swap16();
-        hasher.update(buf.slice(0, lastRead.bytesRead));
+        hasher.update(buf.slice(0, lastRead.bytesRead).swap16());
       }
     } else if (hasUTF8BOM(bomBuf)) {
       const decoder = new StringDecoder('utf8');
