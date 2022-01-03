@@ -4,7 +4,7 @@
   "description": "A Rust/WebAssembly implementation of the Chrome content hashing algorithm",
   "main": "index.js",
   "scripts": {
-    "prepublishOnly": "rm -rf pkg && wasm-pack build --target nodejs --release",
+    "prepack": "rm -rf pkg && wasm-pack build --target nodejs --release && rm pkg/.gitignore",
     "test": "mocha --timeout 20000"
   },
   "repository": {
