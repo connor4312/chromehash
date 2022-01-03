@@ -16,11 +16,10 @@ let browser;
 let cdp;
 before(async () => {
   browser = await chromium.launch();
-  const context = await browser.newContext();
-  const page = await context.newPage('about:blank');
+  const page = await browser.newPage();
 
   // grab a CDP session manually since playwright doesn't expose scriptParsed events to us
-  cdp = await browser.pageTarget(page).createCDPSession();
+  cdp = await page.context().newCDPSession(page);
 
   const parsingDone = new Promise(resolve => {
     let todo = testFiles.length;
@@ -33,7 +32,7 @@ before(async () => {
   });
 
   await cdp.send('Debugger.enable');
-  await page.goto(url.pathToFileURL(path.join(testDir, 'index.html')));
+  await page.goto(url.pathToFileURL(path.join(testDir, 'index.html')).toString());
   await parsingDone;
 });
 
