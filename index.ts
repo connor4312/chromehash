@@ -150,7 +150,10 @@ const normalizeChromehashBuffer = (buffer: Buffer) => {
   return utf8ToUtf16(buffer);
 };
 
-const normalizeShaBuffer = (buffer: Buffer) => {
+/**
+ * Normalizes a buffer to UTF-8 for use with the SHA hasher.
+ */
+export const normalizeShaBuffer = (buffer: Buffer) => {
   if (hasUTF8BOM(buffer)) {
     return buffer.slice(3);
   }
